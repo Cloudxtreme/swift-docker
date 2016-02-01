@@ -20,12 +20,17 @@ fi \n\
 cd /var/swift/swift-dev/swift; \n\
 ./utils/update-checkout --clone; \n\
 " >> /checkout_swift.bash
-RUN chmod 700 /checkout_swift.bash
-RUN bash /checkout_swift.bash
+RUN chmod +x /checkout_swift.bash
 
-ENV PATH /var/swift/swift-latest/usr/bin:$PATH
+RUN echo " \
+#! /bin/bash \n\
+mkdir -p /var/swift/swift-bin/linux-built; \n\
+cd /var/swift/swift-dev/swift; \n\
+./utils/build-script --preset=mixin_linux_installation install_destdir=/var/swift/swift-bin/linux-built installable_package=/var/swift/swift-bin/linux-built.tar.gz; \n\
+" >> /build_swift.bash
+RUN chmod +x /build_swift.bash
 
-ARG swift_version=swift-2.2-SNAPSHOT-2015-12-22-a
+ARG swift_version=swift-2.2-SNAPSHOT-2016-01-11-a
 ARG ubuntu_version=ubuntu1404
 ARG ubuntu_version_path=ubuntu14.04
 
@@ -33,11 +38,8 @@ ENV swift_filename $swift_version-$ubuntu_version_path
 ENV swift_path https://swift.org/builds/$ubuntu_version/$swift_version/$swift_filename.tar.gz
 
 RUN echo  " \
-if [ -d "/var/swift/swift-latest/usr" ]; then \n\
-  rm -r /var/swift/swift-latest/usr; \n\
-fi \n\
-mkdir -p /var/swift/swift-latest; \n\
-cd /var/swift/swift-latest; \n\
+mkdir -p /var/swift/swift-bin/linux-snapshot; \n\
+cd /var/swift/swift-bin/linux-snapshot; \n\
 swift_path=\"$swift_path\"\n\
 swift_filename=\"$swift_filename\"\n\
 wget \$swift_path; \n\
@@ -46,8 +48,9 @@ mv \$swift_filename/usr usr; \n\
 rm -r \$swift_filename; \n\
 rm \$swift_filename.*; \n\
 " >> /download_swift.bash
-RUN chmod 700 /download_swift.bash
-RUN bash /download_swift.bash
+RUN chmod +x /download_swift.bash
+
+ENV PATH /var/swift/swift-bin/linux-built/usr/bin:/var/swift/swift-bin/linux-snapshot/usr/bin:$PATH
 
 ENV swift_filename ""
 ENV swift_path ""
