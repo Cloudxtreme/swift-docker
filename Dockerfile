@@ -4,8 +4,8 @@ RUN apt-get update
 RUN bash -c " \
   apt-get install -y git cmake ninja-build clang python uuid-dev libicu-dev \
     icu-devtools libbsd-dev libedit-dev libxml2-dev libsqlite3-dev swig \
-    libpython-dev libncurses5-dev pkg-config wget curl nano; \
-  apt-get install -y clang-3.6; \
+    libssl-dev libpython-dev libncurses5-dev pkg-config wget curl nano; \
+  apt-get install -y clang-3.6 ; \
   update-alternatives --install /usr/bin/clang clang /usr/bin/clang-3.6 100; \
   update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.6 100; \
 "
@@ -30,12 +30,12 @@ cd /var/swift/swift-dev/swift; \n\
 " >> /build_swift.bash
 RUN chmod +x /build_swift.bash
 
-ARG swift_version=swift-2.2-SNAPSHOT-2016-01-11-a
+ARG swift_version=swift-DEVELOPMENT-SNAPSHOT-2016-01-25-a
 ARG ubuntu_version=ubuntu1404
 ARG ubuntu_version_path=ubuntu14.04
 
 ENV swift_filename $swift_version-$ubuntu_version_path
-ENV swift_path https://swift.org/builds/$ubuntu_version/$swift_version/$swift_filename.tar.gz
+ENV swift_path https://swift.org/builds/development/$ubuntu_version/$swift_version/$swift_filename.tar.gz
 
 RUN echo  " \
 mkdir -p /var/swift/swift-bin/linux-snapshot; \n\
