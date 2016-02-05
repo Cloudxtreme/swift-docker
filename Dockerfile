@@ -4,7 +4,9 @@ RUN apt-get update
 RUN bash -c " \
   apt-get install -y git cmake ninja-build clang python uuid-dev libicu-dev \
     icu-devtools libbsd-dev libedit-dev libxml2-dev libsqlite3-dev swig \
-    libssl-dev libpython-dev libncurses5-dev pkg-config wget curl nano; \
+    libssl-dev libpython-dev libncurses5-dev pkg-config wget curl nano \
+    mysql-server mysql-client libmysqlclient-dev nginx \
+    ; \
   apt-get install -y clang-3.6 ; \
   update-alternatives --install /usr/bin/clang clang /usr/bin/clang-3.6 100; \
   update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.6 100; \
@@ -57,4 +59,8 @@ ENV swift_path ""
 
 WORKDIR /var/swift
 VOLUME /var/swift
+
+EXPOSE 8080
+EXPOSE 80
+
 CMD /bin/bash -l
