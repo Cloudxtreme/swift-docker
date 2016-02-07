@@ -8,4 +8,4 @@ shift
 COMMAND=$*
 COMMAND=${COMMAND:-bash}
 
-docker exec -it $CONTAINER /bin/bash -lc "cd /var/apps/$APP; $COMMAND"
+docker exec -it $CONTAINER /bin/bash -lc "cd /var/swift/$APP; $COMMAND"

@@ -1,6 +1,9 @@
 ---
 - command: docker ps -a
   register: container_list
+- name: stop existing system docker container
+  command: docker rm -f {{system_prefix}}_app_{{env}}
+  when: container_list.stdout.find('{{system_prefix}}_app_{{env}}') != -1
 - name: stop existing docker containers
   command: docker rm -f {{item.key}}_app_{{env}}
   when: container_list.stdout.find('{{item.key}}_app_{{env}}') != -1
@@ -13,3 +16,6 @@
 - name: run docker container
   command: docker run -d --net=host --name={{item.key}}_app_{{env}} {{volume_command}} {{item.key}}_app_{{env}}
   with_dict: "{{apps}}"
+- name: run system docker container
+  command: docker run -dit --net=host --name={{system_prefix}}_app_{{env}} {{volume_command}} {{apps.keys()[0]}}_app_{{env}} /bin/bash
+  when: env=="development"

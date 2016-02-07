@@ -17,15 +17,5 @@ database:
 database_passwords:
   {{env}}: "{{database_passwords[env]}}"
 app_secrets:
-  secret_keys:
-  {% for key in apps %}
-  {{key}}: {{app_secrets.secret_keys[key]}}
-  {% endfor %}
-  
   rsa_key: |
     {{app_secrets.rsa_key.replace("\n", "\n    ")}}
-  app_specific_secrets:
-  {% for name in apps %}
-  {{name}}: |
-      {{app_secrets.app_specific_secrets[name].replace("\n", "\n      ")}}
-  {% endfor %}
