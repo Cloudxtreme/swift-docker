@@ -1,0 +1,7 @@
+---
+domain: mydomain.com
+apps:
+  myapp:
+    port: 3000
+    repository_host: github.com
+    repository_name: myuser/myapp

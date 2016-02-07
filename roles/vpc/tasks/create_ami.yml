@@ -1,0 +1,48 @@
+---
+- name: Check for the deployment AMI
+  local_action:
+    module: ec2_ami_find
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    owner: self
+    name: "{{system_prefix}}-{{env}}-deployment"
+  register: deployment_ami
+- set_fact: has_ami={{deployment_ami.results != []}}
+- name: Create a deployment server
+  local_action:
+    module: ec2
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    image: ami-d05e75b8
+    assign_public_ip: true
+    instance_type: t2.micro
+    vpc_subnet_id: "{{vpc.subnets[0].id}}"
+    key_name: "{{key_name}}"
+    group_id: "{{public_security_group.group_id}}"
+    count_tag: 
+      Environment: "{{env}}"
+      Type: deployment
+      System: "{{system_prefix}}"
+    exact_count: 1
+    instance_tags:
+      Name: "{{system_prefix}}-{{env}}-deployment"
+      Environment: "{{env}}"
+      Type: deployment
+      System: "{{system_prefix}}"
+    wait: yes
+  register: deployment_box
+  when: has_ami == false
+
+- name: Wait for the deployment box to come online
+  local_action: wait_for host={{deployment_box.tagged_instances[0].public_ip}} port=22 
+  when: has_ami == false
+
+- name: Add the deployment box to the host list
+  add_host: name={{ deployment_box.tagged_instances[0].public_ip }} groups=deployment_box
+  when: has_ami == false
+
+- name: Add the new deployment box key to the known hosts
+  command: ssh-keyscan {{deployment_box.tagged_instances[0].public_ip}}
+  when: has_ami == false and deployment_box.changed == true

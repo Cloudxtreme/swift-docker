@@ -1,0 +1,34 @@
+---
+- name: Set up the VPC and database server
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - vars/aws_config.yml
+    - vars/aws_credentials.yml
+    - vars/app_secrets.yml
+  roles:
+    - vpc
+    - database_server
+
+- name: Set up the deployment AMI
+  remote_user: ubuntu
+  hosts: deployment_box
+  vars_files:
+    - vars/app_config.yml
+    - vars/aws_config.yml
+    - vars/aws_credentials.yml
+    - vars/app_secrets.yml
+  roles:
+    - deployment_box
+- name: Set up the app scaling group
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - vars/app_config.yml
+    - vars/app_secrets.yml
+    - vars/aws_config.yml
+    - vars/aws_credentials.yml
+  roles:
+    - {role: app_server, when: env != "development"}

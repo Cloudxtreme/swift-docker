@@ -1,0 +1,28 @@
+---
+- set_fact: app_group_name="{{system_prefix}}-{{env}}-app-server"
+- name: Destroy the scaling group for the apps
+  local_action:
+    module: ec2_asg
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    name: "{{app_group_name}}"
+    state: absent
+
+- name: Destroy the launch configuration for the apps
+  local_action:
+    module: ec2_lc
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    name: "{{app_group_name}}"
+    state: absent
+
+- name: Destroy the load balancer for the apps
+  local_action:
+    module: ec2_elb_lb
+    name: "{{app_group_name}}"
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    state: absent

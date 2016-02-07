@@ -1,0 +1,50 @@
+---
+- name: Create a VPC
+  local_action:
+    module: ec2_vpc
+    state: present
+    cidr_block: "{{ ip_block }}.0.0/16"
+    region: "{{ aws_region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    internet_gateway: yes
+    resource_tags:
+      Name: "{{system_prefix}}-{{ env }}"
+    subnets:
+      - cidr: "{{ ip_block }}.1.0/24"
+        az: "{{aws_region}}b"
+        resource_tags:
+          Environment: "{{ env }}"
+          Type: public
+          Name: "{{system_prefix}}-{{ env }}-public-b"
+      - cidr: "{{ ip_block }}.2.0/24"
+        az: "{{aws_region}}c"
+        resource_tags:
+          Environment: "{{ env }}"
+          Type: public
+          Name: "{{system_prefix}}-{{ env }}-public-c"
+      - cidr: "{{ ip_block }}.3.0/24"
+        az: "{{aws_region}}b"
+        resource_tags:
+          Environment: "{{ env }}"
+          Type: app
+          Name: "{{system_prefix}}-{{ env }}-app-b"
+      - cidr: "{{ ip_block }}.4.0/24"
+        az: "{{aws_region}}c"
+        resource_tags:
+          Environment: "{{ env }}"
+          Type: app
+          Name: "{{system_prefix}}-{{ env }}-app-c"
+      - cidr: "{{ ip_block }}.5.0/24"
+        az: "{{aws_region}}b"
+        resource_tags:
+          Environment: "{{ env }}"
+          Type: db
+          Name: "{{system_prefix}}-{{ env }}-db-b"
+      - cidr: "{{ ip_block }}.6.0/24"
+        az: "{{aws_region}}c"
+        resource_tags:
+          Environment: "{{ env }}"
+          Type: db
+          Name: "{{system_prefix}}-{{ env }}-db-c"
+  register: vpc

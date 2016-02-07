@@ -1,0 +1,9 @@
+---
+- set_fact: container_name="{{system_prefix}}_web_{{env}}"
+- command: docker ps -a
+  register: container_list
+- name: stop existing docker containers
+  command: docker rm -f {{container_name}}
+  when: container_list.stdout.find(container_name) != -1
+- name: run docker container
+  command: docker run -dit --net=host --name={{container_name}} {{container_name}}

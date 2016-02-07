@@ -1,0 +1,19 @@
+---
+aws_region: us-east-1
+system_prefix: myapp
+key_name: my-aws-ssh-key
+ip_blocks:
+  development: "172.1"
+  staging: "127.2"
+  production: "127.3"
+database_passwords:
+  development: 12341234
+  staging: 12341234
+  production: 12341234
+config_repository:
+  host: github.com
+  name: myuser/myapp-cloud-config
+certificate_ids:
+  development: arn:aws:iam:xyz 
+  staging: arn:aws:iam:xyz 
+  production: arn:aws:iam:xyz 

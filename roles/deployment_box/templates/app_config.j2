@@ -1,0 +1,31 @@
+---
+env: {{env}}
+system_prefix: {{system_prefix}}
+domains:
+  {{env}}: {{domains[env]}}
+apps:
+{% for name,config in apps.viewitems() %}
+  {{name}}:
+  {%for key,value in config.viewitems() %}
+  {{key}}: "{{value}}"
+  {% endfor %}
+{% endfor %}
+
+database:
+  instance:
+    endpoint: "{{hostvars.localhost.database.instance.endpoint}}"
+database_passwords:
+  {{env}}: "{{database_passwords[env]}}"
+app_secrets:
+  secret_keys:
+  {% for key in apps %}
+  {{key}}: {{app_secrets.secret_keys[key]}}
+  {% endfor %}
+  
+  rsa_key: |
+    {{app_secrets.rsa_key.replace("\n", "\n    ")}}
+  app_specific_secrets:
+  {% for name in apps %}
+  {{name}}: |
+      {{app_secrets.app_specific_secrets[name].replace("\n", "\n      ")}}
+  {% endfor %}

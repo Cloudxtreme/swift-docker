@@ -1,0 +1,19 @@
+- set_fact: database_name={{system_prefix}}-{{env}}
+
+- name: Remove the database
+  local_action:
+    module: rds
+    aws_region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    command: delete
+    instance_name: "{{database_name}}"
+    wait: yes
+- name: Remove the database subnet
+  local_action:
+    module: rds_subnet_group
+    aws_region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    state: absent
+    name: "{{database_name}}"

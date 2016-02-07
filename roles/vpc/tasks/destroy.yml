@@ -1,0 +1,78 @@
+---
+- name: Find the deployment AMI
+  local_action:
+    module: ec2_ami_find
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    owner: self
+    name: "{{system_prefix}}-{{env}}-deployment"
+  register: deployment_ami
+- name: Remove the deployment AMI
+  local_action:
+    module: ec2_ami
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    image_id: "{{deployment_ami.results[0].ami_id}}"
+    state: absent
+  when: deployment_ami.results != []
+- name: Remove the jump box
+  local_action:
+    module: ec2
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    image: ami-d05e75b8
+    count_tag: 
+      Environment: "{{env}}"
+      System: "{{system_prefix}}"
+      Type: jump-box
+    exact_count: 0
+    wait: yes
+- name: Remove the NAT
+  local_action:
+    module: ec2
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    image: ami-d05e75b8
+    count_tag: 
+      Environment: "{{env}}"
+      System: "{{system_prefix}}"
+      Type: nat
+    exact_count: 0
+    wait: yes
+- name: Remove the private VPC group
+  local_action:
+    module: ec2_group
+    region: "{{ aws_region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state: absent
+    vpc_id:  "{{ vpc.vpc_id }}"
+    name: "{{env}}-private"
+    description: Non-publicly accessible servers in the {{env}} environment
+    rules:
+- name: Remove the public VPC group
+  local_action:
+    module: ec2_group
+    region: "{{ aws_region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state: absent
+    vpc_id:  "{{ vpc.vpc_id }}"
+    name: "{{env}}-public"
+    description: Publicly accessible servers in the {{env}} environment
+    rules:
+- name: Remove the VPC
+  local_action:
+    module: ec2_vpc
+    state: absent
+    cidr_block: "{{ ip_block }}.0.0/16"
+    region: "{{ aws_region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    internet_gateway: yes
+    resource_tags:
+      Name: "{{system_prefix}}-{{ env }}"

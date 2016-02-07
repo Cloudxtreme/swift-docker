@@ -1,0 +1,17 @@
+---
+- name: Copy docker files to docker folder
+  copy: src=Dockerfile dest=docker
+- copy: src=create_config.rb dest=docker
+- copy: src=keys/{{env}}_key.pem dest=docker
+- copy: src=keys/{{env}}_cert.pem dest=docker
+- copy: src=keys/{{env}}_chain.pem dest=docker
+- name: build docker file
+  command: docker build
+            --build-arg RAILS_ENV={{env}}
+            --build-arg DOMAIN_ROOT={{domains[env]}}
+            --build-arg APP_CONFIG="{{apps}}"
+            -t {{system_prefix}}_web_{{env}}
+            docker
+  with_dict: "{{apps}}"
+- name: Empty docker folder
+  shell: rm docker/*

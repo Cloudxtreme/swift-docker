@@ -1,0 +1,92 @@
+---
+- set_fact: app_group_name="{{system_prefix}}-{{env}}-app-server"
+- name: Check for the deployment AMI
+  local_action:
+    module: ec2_ami_find
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    owner: self
+    name: "{{system_prefix}}-{{env}}-deployment"
+    no_result_action: fail
+  register: deployment_ami
+- set_fact: init_script_contents="#! /bin/bash\ndocker start {{system_prefix}}_web_{{env}}"
+- set_fact: init_script_contents={{init_script_contents+"\ndocker start "+item.key+"_app_{{env}}"}}
+  with_dict: "{{apps}}"
+
+- name: Upload the certificate for the app
+  local_action:
+    module: iam_cert
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    state: present
+    cert: keys/{{env}}_cert.pem
+    key: keys/{{env}}_key.pem
+    cert_chain: keys/{{env}}_chain.pem
+    name: "{{system_prefix}}-{{env}}-certificate"
+  register: certificate
+- name: Create the load balancer for the apps
+  local_action:
+    module: ec2_elb_lb
+    name: "{{app_group_name}}"
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    state: present
+    subnets:
+      - "{{vpc.subnets[0].id}}"
+      - "{{vpc.subnets[1].id}}"
+    security_group_ids:
+      - "{{public_security_group.group_id}}"
+    listeners:
+      - protocol: http
+        load_balancer_port: 80
+        instance_port: 80
+      - protocol: https
+        load_balancer_port: 443
+        instance_port: 443
+        ssl_certificate_id: arn:aws:iam::{{account_number}}:server-certificate/{{system_prefix}}-{{env}}-certificate
+    health_check:
+      ping_protocol: https
+      ping_port: 443
+      ping_path: "/"
+      response_timeout: 5
+      interval: 30
+      unhealthy_threshold: 2
+      healthy_threshold: 2
+  register: load_balancer
+- name: Create the launch configuration for the apps
+  local_action:
+    module: ec2_lc
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    assign_public_ip: false
+    image_id: "{{deployment_ami.results[0].ami_id}}"
+    key_name: "{{key_name}}"
+    name: "{{app_group_name}}"
+    security_groups:
+      - "{{private_security_group.group_id}}"
+    instance_type: t2.micro
+    user_data: "{{init_script_contents}}"
+- name: Create the scaling group for the apps
+  local_action:
+    module: ec2_asg
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    launch_config_name: "{{app_group_name}}"
+    load_balancers:
+      - "{{app_group_name}}"
+    name: "{{app_group_name}}"
+    desired_capacity: 2
+    min_size: 2
+    max_size: 4
+    vpc_zone_identifier:
+      - "{{vpc.subnets[2].id}}"
+      - "{{vpc.subnets[3].id}}"
+    tags:
+      - Name: "{{app_group_name}}"
+      - Environment: "{{env}}"
+      - Type: app-server

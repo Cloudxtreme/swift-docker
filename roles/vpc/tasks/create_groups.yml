@@ -1,0 +1,81 @@
+---
+
+- name: Create the public VPC group
+  local_action:
+    module: ec2_group
+    region: "{{ aws_region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state: present
+    vpc_id:  "{{ vpc.vpc_id }}"
+    description: Publicly accessible servers in the {{env}} environment
+    name: "{{env}}-public"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 11371
+        to_port: 11371
+        cidr_ip: 0.0.0.0/0
+  register: public_security_group
+- name: Create the private VPC group
+  local_action:
+    module: ec2_group
+    region: "{{ aws_region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state: present
+    vpc_id:  "{{ vpc.vpc_id }}"
+    description: Non-publicly accessible servers in the {{env}} environment
+    name: "{{env}}-private"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        group_name: "{{env}}-public"
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        group_name: "{{env}}-private"
+        
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        group_name: "{{env}}-public"
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        group_name: "{{env}}-private"
+        
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        group_name: "{{env}}-public"
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        group_name: "{{env}}-private"
+        
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        group_name: "{{env}}-public"
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        group_name: "{{env}}-private"
+  register: private_security_group

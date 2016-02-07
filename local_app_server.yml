@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - vars/aws_config.yml
+    - vars/aws_credentials.yml
+    - vars/app_config.yml
+    - vars/app_secrets.yml
+  roles:
+    - vpc
+    - database_server
+    - app_container
+    - web_container

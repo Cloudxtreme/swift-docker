@@ -1,0 +1,15 @@
+---
+- command: docker ps -a
+  register: container_list
+- name: stop existing docker containers
+  command: docker rm -f {{item.key}}_app_{{env}}
+  when: container_list.stdout.find('{{item.key}}_app_{{env}}') != -1
+  with_dict: "{{apps}}"
+- command: pwd
+  register: working_directory
+- set_fact: volume_command=""
+- set_fact: volume_command="-v {{working_directory.stdout}}/..:/var/swift"
+  when: env=="development"
+- name: run docker container
+  command: docker run -d --net=host --name={{item.key}}_app_{{env}} {{volume_command}} {{item.key}}_app_{{env}}
+  with_dict: "{{apps}}"

@@ -1,0 +1,37 @@
+- set_fact: publicly_accessible={{env=="development"}}
+- name: Create a database subnet
+  local_action:
+    module: rds_subnet_group
+    state: present
+    name: "{{name}}"
+    description: "{{system_prefix}} {{ env }} database"
+    aws_region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    subnets:
+      - "{{ publicly_accessible | ternary(vpc.subnets[0].id, vpc.subnets[4].id) }}"
+      - "{{ publicly_accessible | ternary(vpc.subnets[1].id, vpc.subnets[5].id) }}"
+- name: Create a database
+  local_action:
+    module: rds
+    command: create
+    instance_name: "{{name}}"
+    db_name: "{{system_prefix}}_{{env}}"
+    db_engine: MySQL
+    size: 10
+    instance_type: db.t2.micro
+    username: "{{username}}"
+    password: "{{ password }}"
+    aws_region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    publicly_accessible: "{{publicly_accessible}}"
+    subnet: "{{name}}"
+    vpc_security_groups:
+      - "{{publicly_accessible | ternary(public_security_group.group_id,private_security_group.group_id)}}"
+    tags:
+      Environment: "{{ env }}"
+      System: "{{system_prefix}}"
+    wait: yes
+    wait_timeout: 10000
+  register: database

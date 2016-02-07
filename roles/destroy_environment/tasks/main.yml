@@ -1,0 +1,5 @@
+---
+- include: ../../vpc/tasks/create_vpc.yml
+- include: ../../app_server/tasks/destroy.yml
+- include: ../../database_server/tasks/destroy.yml
+- include: ../../vpc/tasks/destroy.yml

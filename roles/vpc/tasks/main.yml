@@ -1,0 +1,6 @@
+---
+- include: create_vpc.yml
+- include: create_groups.yml
+- include: create_boxes.yml
+- include: create_routes.yml
+- include: create_ami.yml

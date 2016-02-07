@@ -1,0 +1,49 @@
+---
+- name: Create an EC2 jump box
+  local_action:
+    module: ec2
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    image: ami-d05e75b8
+    assign_public_ip: true
+    instance_type: t2.micro
+    vpc_subnet_id: "{{vpc.subnets[0].id}}"
+    key_name: "{{key_name}}"
+    group_id: "{{public_security_group.group_id}}"
+    count_tag: 
+      Environment: "{{env}}"
+      Type: jump-box
+      System: "{{system_prefix}}"
+    exact_count: 1
+    instance_tags:
+      Name: "{{system_prefix}}-{{env}}-jump-box"
+      Environment: "{{env}}"
+      Type: jump-box
+      System: "{{system_prefix}}"
+
+- name: Create an EC2 nat box
+  local_action:
+    module: ec2
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    image: ami-68115b02
+    assign_public_ip: true
+    instance_type: t2.micro
+    vpc_subnet_id: "{{vpc.subnets[0].id}}"
+    key_name: "{{key_name}}"
+    group_id: "{{public_security_group.group_id}}"
+    count_tag: 
+      Environment: "{{env}}"
+      Type: nat
+      System: "{{system_prefix}}"
+    exact_count: 1
+    source_dest_check: no
+    instance_tags:
+      Name: "{{system_prefix}}-{{env}}-nat"
+      Environment: "{{env}}"
+      Type: nat
+      System: "{{system_prefix}}"
+    wait: yes
+  register: nat_box

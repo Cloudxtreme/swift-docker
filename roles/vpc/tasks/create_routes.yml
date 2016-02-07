@@ -1,0 +1,35 @@
+---
+- name: Create the public route table
+  local_action:
+    module: ec2_vpc_route_table
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    vpc_id: "{{vpc.vpc_id}}"
+    tags:
+      Name: "{{system_prefix}}-{{env}}-public"
+    subnets:
+      - "{{ ip_block }}.1.0/24"
+      - "{{ ip_block }}.2.0/24"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{vpc.igw_id}}"
+  when: "{{vpc.changed}}"
+- name: Create the private route table
+  local_action:
+    module: ec2_vpc_route_table
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    vpc_id: "{{vpc.vpc_id}}"
+    tags:
+      Name: "{{system_prefix}}-{{env}}-private"
+    subnets:
+      - "{{ ip_block }}.3.0/24"
+      - "{{ ip_block }}.4.0/24"
+      - "{{ ip_block }}.5.0/24"
+      - "{{ ip_block }}.6.0/24"
+    routes:
+      - dest: 0.0.0.0/0
+        instance_id: "{{nat_box.tagged_instances[0].id}}"
+  when: "{{vpc.changed}}"

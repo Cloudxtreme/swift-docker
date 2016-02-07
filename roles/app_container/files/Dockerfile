@@ -1,11 +1,29 @@
 FROM ubuntu
 
+ARG GIT_HOST
+ARG GIT_REPOSITORY
+ARG DATABASE_URL
+ARG SYSTEM_NAME
+ARG DATABASE_PASSWORD
+ARG APP_NAME
+ARG PORT_NUMBER
+ARG RSA_KEY
+ARG APP_ENV=development
+
+ENV GIT_HOST ${GIT_HOST}
+ENV GIT_URL ssh://git@${GIT_HOST}/${GIT_REPOSITORY}
+ENV APP_NAME ${APP_NAME}
+ENV APP_ENV ${APP_ENV}
+ENV SYSTEM_NAME ${SYSTEM_NAME}
+ENV DATABASE_URL ${DATABASE_URL}
+ENV DATABASE_PASSWORD ${DATABASE_PASSWORD}
+
 RUN apt-get update
 RUN bash -c " \
   apt-get install -y git cmake ninja-build clang python uuid-dev libicu-dev \
     icu-devtools libbsd-dev libedit-dev libxml2-dev libsqlite3-dev swig \
     libssl-dev libpython-dev libncurses5-dev pkg-config wget curl nano \
-    mysql-server mysql-client libmysqlclient-dev nginx \
+    mysql-client libmysqlclient-dev nginx ruby \
     ; \
   apt-get install -y clang-3.6 ; \
   update-alternatives --install /usr/bin/clang clang /usr/bin/clang-3.6 100; \
@@ -32,7 +50,7 @@ cd /var/swift/swift-dev/swift; \n\
 " >> /build_swift.bash
 RUN chmod +x /build_swift.bash
 
-ARG swift_version=swift-DEVELOPMENT-SNAPSHOT-2016-01-25-a
+ARG swift_version=swift-DEVELOPMENT-SNAPSHOT-2016-02-03-a
 ARG ubuntu_version=ubuntu1404
 ARG ubuntu_version_path=ubuntu14.04
 
@@ -57,10 +75,23 @@ ENV PATH /var/swift/swift-bin/linux-built/usr/bin:/var/swift/swift-bin/linux-sna
 ENV swift_filename ""
 ENV swift_path ""
 
+RUN mkdir /root/.ssh
+RUN echo "${RSA_KEY}" > /root/.ssh/id_rsa
+RUN chmod 600 /root/.ssh/id_rsa
+
+COPY basic_install.rb /
+COPY custom_install.rb /
+COPY start_app.bash /
+
+RUN /bin/bash -lc " \
+  ruby /basic_install.rb ;\
+  ruby /custom_install.rb ;\
+"
+
+CMD /bin/bash -l /start_app.bash
+
 WORKDIR /var/swift
 VOLUME /var/swift
 
 EXPOSE 8080
 EXPOSE 80
-
-CMD /bin/bash -l

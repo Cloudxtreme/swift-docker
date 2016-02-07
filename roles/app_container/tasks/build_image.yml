@@ -1,0 +1,22 @@
+---
+- name: Copy docker files to docker folder
+  copy: src=Dockerfile dest=docker
+- copy: src=basic_install.rb dest=docker
+- copy: src=custom_install.rb dest=docker
+- copy: src=start_app.bash dest=docker
+- name: build docker file
+  command: docker build
+            --build-arg GIT_HOST={{item.value.repository_host}}
+            --build-arg GIT_REPOSITORY={{item.value.repository_name}}
+            --build-arg APP_NAME={{item.key}}
+            --build-arg APP_ENV={{env}}
+            --build-arg SYSTEM_NAME={{ system_prefix }}
+            --build-arg DATABASE_URL={{ database.instance.endpoint }}
+            --build-arg DATABASE_PASSWORD={{ database_passwords[env] }}
+            --build-arg PORT_NUMBER={{ item.value.port }}
+            --build-arg RSA_KEY="{{app_secrets.rsa_key}}"
+            -t {{item.key}}_app_{{env}}
+            docker
+  with_dict: "{{apps}}"
+- name: Empty docker folder
+  shell: rm docker/*

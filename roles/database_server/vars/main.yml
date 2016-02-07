@@ -1,0 +1,4 @@
+---
+name: "{{system_prefix}}-{{env}}"
+username: "{{system_prefix}}"
+password: "{{ database_passwords[env] }}"

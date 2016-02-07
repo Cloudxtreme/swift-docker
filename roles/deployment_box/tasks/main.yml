@@ -1,0 +1,70 @@
+- name: Update apt repositories
+  shell: "apt-add-repository -y ppa:ansible/ansible; apt-get update"
+  become: true
+- name: Install git
+  apt: name=git
+  become: true
+- name: Install wget
+  apt: name=wget
+  become: true
+- name: Install nano
+  apt: name=nano
+  become: true
+- name: Install software-properties-common
+  apt: name=software-properties-common
+  become: true
+- name: Install pip
+  apt: name=python-pip
+  become: true
+- name: Install ansible
+  apt: name=ansible
+  become: true
+- name: Install docker
+  shell: "wget -qO- https://get.docker.com/ | sh"
+  become: true
+- name: Set up SSH config
+  shell: |
+    echo "{{app_secrets.rsa_key}}" >> ~/.ssh/id_rsa
+    chmod 600 ~/.ssh/id_rsa
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+- name: Copy config directory
+  copy: src=../../../ dest=/home/ubuntu/ansible/
+- name: Remove ansible variables from config
+  shell: rm /home/ubuntu/ansible/vars/*.yml
+- name: Set up ansible config
+  template: src=app_config.j2 dest=/home/ubuntu/ansible/vars/app_config.yml
+- name: Install app
+  shell: |
+    cd /home/ubuntu/ansible
+    pip install boto
+    ansible-playbook -i hosts remote_app_server.yml
+  become: true
+- name: Remove ansible folder
+  file:
+    path: /home/ubuntu/ansible
+    state: absent
+- name: Create AMI from deployment box
+  local_action:
+    module: ec2_ami
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    name: "{{system_prefix}}-{{env}}-deployment"
+    instance_id: "{{hostvars.localhost.deployment_box.tagged_instances[0].id}}"
+    tags:
+      Name: "{{system_prefix}}-{{env}}-deployment"
+      Environment: "{{env}}"
+      Type: deployment
+    wait: yes
+- name: Destroy the deployment server
+  local_action:
+    module: ec2
+    region: "{{ aws_region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    image: ami-d05e75b8
+    count_tag: 
+      Environment: "{{env}}"
+      System: "{{system_prefix}}"
+      Type: deployment
+    exact_count: 0
