@@ -1,2 +1,2 @@
 #! /bin/bash
-sudo chown -R `whoami` ../code
+sudo chown -R `whoami` ..

@@ -8,7 +8,7 @@
     owner: self
     name: "{{system_prefix}}-{{env}}-deployment"
   register: deployment_ami
-- set_fact: has_ami={{deployment_ami.results != []}}
+- set_fact: has_ami={{deployment_ami.results != [] or env == "development"}}
 - name: Create a deployment server
   local_action:
     module: ec2
