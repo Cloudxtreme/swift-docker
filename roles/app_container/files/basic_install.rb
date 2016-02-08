@@ -1,19 +1,21 @@
 app_name = ENV['APP_NAME']
 environment = ENV['APP_ENV']
 system_name = ENV['SYSTEM_NAME']
-database_name = system_name + "_" + ENV['APP_ENV']
+database_name = app_name + "_" + ENV['APP_ENV']
 database_password = ENV['DATABASE_PASSWORD']
 database_url = ENV['DATABASE_URL']
 git_url = ENV['GIT_URL']
+git_branch = ENV['GIT_BRANCH']
 
 app_dir = "/var/swift/#{app_name}"
 `mkdir -p #{app_dir}`
 Dir.chdir "#{app_dir}"
 if !File.exists?(app_dir + "/Package.swift")
   `rm -rf #{app_dir}/*`
+  `ssh-keyscan github.com >> /root/.ssh/known_hosts`
   `git clone #{git_url} #{app_dir}`
 end
-`git fetch; git pull`
+`git fetch; git checkout #{git_branch}; git pull`
 
 system <<EOS
 bash -cl "
@@ -40,6 +42,7 @@ File.open("Resources/config/database.plist", "w") do |file|
 EOS
   )
 end
+system "mysql -u#{system_name} -p\"#{database_password}\" -h#{database_url} -e 'CREATE DATABASE IF NOT EXISTS #{database_name}'"
 if environment == "development"
   File.open("Resources/config/testDatabase.plist", "w") do |file|
     test_database_name = database_name.gsub(/development$/, 'test')

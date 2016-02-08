@@ -2,6 +2,7 @@ FROM ubuntu
 
 ARG GIT_HOST
 ARG GIT_REPOSITORY
+ARG GIT_BRANCH
 ARG DATABASE_URL
 ARG SYSTEM_NAME
 ARG DATABASE_PASSWORD
@@ -12,6 +13,7 @@ ARG APP_ENV=development
 
 ENV GIT_HOST ${GIT_HOST}
 ENV GIT_URL ssh://git@${GIT_HOST}/${GIT_REPOSITORY}
+ENV GIT_BRANCH ${GIT_BRANCH}
 ENV APP_NAME ${APP_NAME}
 ENV APP_ENV ${APP_ENV}
 ENV SYSTEM_NAME ${SYSTEM_NAME}
@@ -84,6 +86,7 @@ COPY custom_install.rb /
 COPY start_app.bash /
 
 RUN /bin/bash -lc " \
+  /download_swift.bash ;\
   ruby /basic_install.rb ;\
   ruby /custom_install.rb ;\
 "

@@ -6,4 +6,4 @@
   command: docker rm -f {{container_name}}
   when: container_list.stdout.find(container_name) != -1
 - name: run docker container
-  command: docker run -dit --net=host --name={{container_name}} {{container_name}}
+  command: docker run -d --net=host --name={{container_name}} {{container_name}}

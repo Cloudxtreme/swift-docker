@@ -8,6 +8,7 @@
   command: docker build
             --build-arg GIT_HOST={{item.value.repository_host}}
             --build-arg GIT_REPOSITORY={{item.value.repository_name}}
+            --build-arg GIT_BRANCH={{item.value.repository_branch}}
             --build-arg APP_NAME={{item.key}}
             --build-arg APP_ENV={{env}}
             --build-arg SYSTEM_NAME={{ system_prefix }}

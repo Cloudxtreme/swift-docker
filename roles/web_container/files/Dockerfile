@@ -14,11 +14,6 @@ RUN /bin/bash -c " \
   apt-get install -y nginx ruby ;\
 "
 
-RUN mkdir /etc/nginx/ssl
-COPY ${RAILS_ENV}_cert.pem /etc/nginx/ssl/${DOMAIN_ROOT}_cert.pem
-COPY ${RAILS_ENV}_key.pem /etc/nginx/ssl/${DOMAIN_ROOT}_key.pem
-COPY ${RAILS_ENV}_chain.pem /etc/nginx/ssl/${DOMAIN_ROOT}_chain.pem
-
 COPY create_config.rb /
 
 RUN ruby /create_config.rb
